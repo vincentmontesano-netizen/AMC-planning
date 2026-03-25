@@ -1,0 +1,59 @@
+[build]
+publish = "dist"
+command = "rm -rf node_modules package-lock.json && npm install --no-fund --no-audit && npm run build"
+
+[build.environment]
+NODE_VERSION = "20"
+
+# Note: No serverless functions - pure frontend app
+# Set VITE_AMS_BASE_URL and VITE_AMS_API_VER as environment variables in Netlify
+
+# Headers for JavaScript modules
+[[headers]]
+for = "/assets/*.js"
+[headers.values]
+Content-Type = "text/javascript; charset=utf-8"
+Cache-Control = "public, max-age=31536000"
+
+# Headers for ES modules with .mjs extension
+[[headers]]
+for = "/assets/*.mjs"
+[headers.values]
+Content-Type = "text/javascript; charset=utf-8"
+Cache-Control = "public, max-age=31536000"
+
+# Headers for CSS files
+[[headers]]
+for = "/assets/*.css"
+[headers.values]
+Content-Type = "text/css; charset=utf-8"
+Cache-Control = "public, max-age=31536000"
+
+# Headers for SVG files
+[[headers]]
+for = "/*.svg"
+[headers.values]
+Content-Type = "image/svg+xml; charset=utf-8"
+
+# Fallback header for any JS files
+[[headers]]
+for = "/*.js"
+[headers.values]
+Content-Type = "text/javascript; charset=utf-8"
+
+# General headers for HTML files
+[[headers]]
+for = "/*.html"
+[headers.values]
+Content-Type = "text/html; charset=utf-8"
+
+# Redirects
+[[redirects]]
+from = "/vite.svg"
+to = "/images/59eee07c-20f1-4d39-b757-85758d019d18.avif"
+
+# SPA fallback - must be last
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
