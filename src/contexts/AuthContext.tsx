@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getStoredToken, clearToken } from '../utils/api';
+import { clearToken, getStoredToken, getStoredUsername } from '../utils/api';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   token: string | null;
-  login: (token: string) => void;
+  username: string | null;
+  login: (token: string, usernameHint?: string | null) => void;
   logout: () => void;
   checkAuthStatus: () => boolean;
 }
@@ -18,6 +19,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [token, setToken] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Check authentication status on component mount
@@ -32,11 +34,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (storedToken) {
         setToken(storedToken);
         setIsAuthenticated(true);
+        setUsername(getStoredUsername());
         setIsLoading(false);
         return true;
       } else {
         setToken(null);
         setIsAuthenticated(false);
+        setUsername(null);
         setIsLoading(false);
         return false;
       }
@@ -44,25 +48,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.warn('Error checking auth status:', error);
       setToken(null);
       setIsAuthenticated(false);
+      setUsername(null);
       setIsLoading(false);
       return false;
     }
   };
 
-  const login = (newToken: string) => {
+  const login = (newToken: string, usernameHint?: string | null) => {
     setToken(newToken);
     setIsAuthenticated(true);
+    if (usernameHint != null && String(usernameHint).trim()) {
+      setUsername(String(usernameHint).trim());
+    } else {
+      setUsername(getStoredUsername());
+    }
   };
 
   const logout = () => {
     clearToken();
     setToken(null);
     setIsAuthenticated(false);
+    setUsername(null);
   };
 
   const contextValue: AuthContextType = {
     isAuthenticated,
     token,
+    username,
     login,
     logout,
     checkAuthStatus

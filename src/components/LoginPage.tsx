@@ -60,8 +60,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         })
       );
 
-      // Update auth context
-      login(token);
+      login(token, formData.user);
 
       // Call success callback
       onLoginSuccess();

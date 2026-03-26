@@ -205,6 +205,29 @@ export function getApiSettings(): {
   };
 }
 
+/** Nom d’utilisateur issu des réglages ou des identifiants mémorisés (hors mot de passe). */
+export function getStoredUsername(): string | null {
+  try {
+    const rawSettings = localStorage.getItem('erpApiSettings');
+    if (rawSettings) {
+      const parsed = JSON.parse(rawSettings) as { user?: string };
+      if (typeof parsed.user === 'string' && parsed.user.trim()) return parsed.user.trim();
+    }
+  } catch {
+    /* ignore */
+  }
+  try {
+    const raw = localStorage.getItem('loginCredentials');
+    if (raw) {
+      const c = JSON.parse(raw) as { user?: string };
+      if (typeof c.user === 'string' && c.user.trim()) return c.user.trim();
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 /**
  * Résout l’URL d’appel AMS.
  * - Dev : proxy Vite `/api` → AMS (HTTP).
