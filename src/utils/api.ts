@@ -192,30 +192,41 @@ export function getApiSettings(): {
   const url = amsBaseUrl.replace(/^https?:\/\//, '');
   
   return {
-    user: 'ADMIN',
+    user: '',
     url: url,
     version: amsApiVer,
-    serverdb: 'APP_TEST',
+    serverdb: 'AIRLINES_MAINT',
     serverdbpass: '',
     apiVer: amsApiVer
   };
 }
 
 /**
- * Helper function to make API requests directly to AMS API
+ * Résout l’URL d’appel AMS.
+ * - Dev : proxy Vite `/api` → AMS (HTTP).
+ * - Prod : `/api` → proxy Netlify (évite mixed content) sauf si VITE_AMS_BASE_URL est en https (appel direct).
+ */
+function resolveApiRequestUrl(path: string): string {
+  const isDev = import.meta.env.DEV;
+  const envBase = (import.meta.env.VITE_AMS_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+  const useDirectHttps = !isDev && envBase.length > 0 && /^https:\/\//i.test(envBase);
+
+  if (isDev) {
+    return `/api${path}`;
+  }
+  if (useDirectHttps) {
+    return `${envBase}${path}`;
+  }
+  return `/api${path}`;
+}
+
+/**
+ * Helper function to make API requests (proxy same-origin en prod sauf AMS en HTTPS explicite)
  */
 export async function makeApiRequest(path: string, method: string = 'GET', headers: Record<string, string> = {}, signal?: AbortSignal): Promise<Response> {
-  const isDev = import.meta.env.DEV;
-  
-  const amsBaseUrl = import.meta.env.VITE_AMS_BASE_URL || getApiSettings()?.url || 'http://46.105.115.223:8181';
-  
-  const baseUrl = amsBaseUrl.startsWith('http') ? amsBaseUrl : `http://${amsBaseUrl}`;
-  
-  const fullUrl = isDev 
-    ? `/api${path}`
-    : `${baseUrl}${path}`;
-  
-  console.log('Making API request:', { path, method, isDev, fullUrl });
+  const fullUrl = resolveApiRequestUrl(path);
+
+  console.log('Making API request:', { path, method, isDev: import.meta.env.DEV, fullUrl });
   
   const timeoutSignal = signal || AbortSignal.timeout(30000);
   

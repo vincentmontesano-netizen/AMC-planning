@@ -6,7 +6,9 @@ command = "rm -rf node_modules package-lock.json && npm install --no-fund --no-a
 NODE_VERSION = "20"
 
 # Note: No serverless functions - pure frontend app
-# Set VITE_AMS_BASE_URL and VITE_AMS_API_VER as environment variables in Netlify
+# API AMS en HTTP : en prod le navigateur bloque HTTP depuis une page HTTPS (mixed content).
+# Le proxy ci-dessous sert les appels /api/* en same-origin (HTTPS) vers l'AMS.
+# Optionnel : VITE_AMS_BASE_URL=https://... si l'AMS expose du TLS → appels directs (voir api.ts).
 
 # Headers for JavaScript modules
 [[headers]]
@@ -51,6 +53,13 @@ Content-Type = "text/html; charset=utf-8"
 [[redirects]]
 from = "/vite.svg"
 to = "/images/59eee07c-20f1-4d39-b757-85758d019d18.avif"
+
+# Proxy AMS (évite mixed content HTTPS → HTTP). Doit être avant le fallback SPA.
+[[redirects]]
+from = "/api/*"
+to = "http://46.105.115.223:8181/:splat"
+status = 200
+force = true
 
 # SPA fallback - must be last
 [[redirects]]

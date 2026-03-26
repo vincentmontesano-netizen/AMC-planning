@@ -9,11 +9,11 @@ interface LoginPageProps {
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    user: 'ADMIN',
+    user: '',
     password: '',
     url: '46.105.115.223:8181',
     version: 'v1',
-    serverdb: 'DISMANTLING',
+    serverdb: 'AIRLINES_MAINT',
     serverdbpass: '',
     apiVer: 'v1'
   });
