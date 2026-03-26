@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { Employee } from '../utils/api';
+
+const PAGE_SIZE = 25;
 
 function formatDate(iso?: string | null): string {
   if (!iso) return '';
@@ -27,6 +30,7 @@ export default function EmployeeList(props: {
   const [query, setQuery] = useState<string>('');
   const [deptFilter, setDeptFilter] = useState<string>('all');
   const [activeOnly, setActiveOnly] = useState<boolean>(false);
+  const [pageIndex, setPageIndex] = useState(0);
 
   const departments = useMemo(() => {
     return Array.from(
@@ -71,6 +75,23 @@ export default function EmployeeList(props: {
       return hay.includes(q);
     });
   }, [employees, query, deptFilter, activeOnly]);
+
+  const totalFiltered = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  const maxPageIndex = Math.max(0, totalPages - 1);
+
+  const filteredPage = useMemo(() => {
+    const start = pageIndex * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, pageIndex]);
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [query, deptFilter, activeOnly]);
+
+  useEffect(() => {
+    setPageIndex((p) => Math.min(p, maxPageIndex));
+  }, [maxPageIndex]);
 
   if (isLoading) {
     return (
@@ -127,55 +148,99 @@ export default function EmployeeList(props: {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-3 sm:p-4 space-y-3">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-          <p className="text-sm text-gray-600">
-            {filtered.length} resultat{filtered.length > 1 ? 's' : ''} sur {employees.length}
-            {updatedAt ? ` · maj ${updatedAt.toLocaleTimeString('fr-FR')}` : ''}
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-5 space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-600">
+            <span className="font-semibold text-slate-900">{totalFiltered}</span> résultat
+            {totalFiltered !== 1 ? 's' : ''} (filtre) sur{' '}
+            <span className="font-medium text-slate-800">{employees.length}</span> MEC
+            {updatedAt ? (
+              <span className="text-slate-400">
+                {' '}
+                · maj {updatedAt.toLocaleTimeString('fr-FR')}
+              </span>
+            ) : null}
           </p>
           <button
             type="button"
             onClick={onRefresh}
-            className="self-start rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
           >
+            <RefreshCw className="h-4 w-4 text-slate-500" />
             Actualiser
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Rechercher (nom, code, station, email, tél…)…"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400/30"
           />
           <select
             value={deptFilter}
             onChange={(e) => setDeptFilter(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400/30"
           >
-            <option value="all">Tous les departements</option>
+            <option value="all">Tous les départements</option>
             {departments.map((dept) => (
               <option key={dept} value={dept}>
                 {dept}
               </option>
             ))}
           </select>
-          <label className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm">
             <input
               type="checkbox"
               checked={activeOnly}
               onChange={(e) => setActiveOnly(e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-slate-300 text-slate-700 focus:ring-slate-400/40"
             />
             Actifs uniquement
           </label>
         </div>
+
+        <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-600">
+            {totalFiltered > 0 && (
+              <>
+                Lignes{' '}
+                <span className="font-semibold text-slate-900 tabular-nums">
+                  {pageIndex * PAGE_SIZE + 1}–{Math.min((pageIndex + 1) * PAGE_SIZE, totalFiltered)}
+                </span>
+                <span className="text-slate-400"> · {PAGE_SIZE} par page</span>
+              </>
+            )}
+            {totalFiltered === 0 && <span className="text-slate-500">Aucune ligne à afficher</span>}
+          </p>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              disabled={pageIndex <= 0}
+              onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              Précédent
+            </button>
+            <span className="min-w-[6rem] text-center text-sm font-medium text-slate-700 tabular-nums">
+              {totalFiltered === 0 ? 1 : pageIndex + 1} / {totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={pageIndex >= maxPageIndex}
+              onClick={() => setPageIndex((p) => Math.min(maxPageIndex, p + 1))}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              Suivant
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="overflow-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-auto rounded-2xl border border-slate-200/90 bg-white shadow-sm">
         <table className="min-w-full text-sm">
-          <thead className="sticky top-0 bg-gray-50 text-gray-700">
+          <thead className="sticky top-0 z-10 border-b border-slate-200 bg-gradient-to-b from-slate-50 to-slate-50/90 text-slate-700">
             <tr>
               <th className="px-3 py-2 text-left font-medium">Code</th>
               <th className="px-3 py-2 text-left font-medium">Nom</th>
@@ -188,9 +253,9 @@ export default function EmployeeList(props: {
               <th className="px-3 py-2 text-left font-medium">Sortie</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {filtered.map((e) => (
-              <tr key={e.empcode} className="hover:bg-gray-50">
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {filteredPage.map((e) => (
+              <tr key={e.empcode} className="transition hover:bg-slate-50/80">
                 <td className="px-3 py-2 font-mono text-xs text-gray-800">{e.empcode}</td>
                 <td className="px-3 py-2 text-gray-900">
                   <div className="flex items-center gap-2">
@@ -217,7 +282,7 @@ export default function EmployeeList(props: {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
+            {totalFiltered === 0 && (
               <tr>
                 <td className="px-3 py-6 text-center text-gray-600" colSpan={9}>
                   Aucun résultat.

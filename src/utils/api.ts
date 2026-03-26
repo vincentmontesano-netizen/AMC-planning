@@ -1,5 +1,9 @@
 // ERP API utilities for authentication and token management
 
+/** Base AMS (non affichée à l’utilisateur). Surcharge possible : VITE_AMS_SERVERDB */
+export const AMS_SERVER_DB =
+  String(import.meta.env.VITE_AMS_SERVERDB ?? '').trim() || 'AIRLINES_MAINT';
+
 export interface LoginParams {
   user: string;
   password: string;
@@ -71,7 +75,7 @@ export async function loginERP(params: LoginParams): Promise<string> {
       });
       
       if (response.status === 403) {
-        throw new Error(`Access denied (403): Check database name '${serverdb}' and permissions. Server response: ${errorText}`);
+        throw new Error(`Accès refusé (403) : droits ou configuration serveur. Réponse : ${errorText}`);
       } else if (response.status === 401) {
         throw new Error(`Authentication failed (401): Check username/password. Server response: ${errorText}`);
       } else {
@@ -195,7 +199,7 @@ export function getApiSettings(): {
     user: '',
     url: url,
     version: amsApiVer,
-    serverdb: 'AIRLINES_MAINT',
+    serverdb: AMS_SERVER_DB,
     serverdbpass: '',
     apiVer: amsApiVer
   };

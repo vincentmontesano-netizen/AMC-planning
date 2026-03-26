@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { loginERP, saveToken, saveApiSettings } from '../utils/api';
+import { AMS_SERVER_DB, loginERP, saveToken, saveApiSettings } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LoginPageProps {
@@ -13,9 +13,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     password: '',
     url: '46.105.115.223:8181',
     version: 'v1',
-    serverdb: 'AIRLINES_MAINT',
     serverdbpass: '',
-    apiVer: 'v1'
+    apiVer: 'v1',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -41,23 +40,25 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         password: formData.password,
         url: formData.url,
         version: formData.version,
-        serverdb: formData.serverdb,
-        serverdbpass: formData.serverdbpass
+        serverdb: AMS_SERVER_DB,
+        serverdbpass: formData.serverdbpass,
       });
 
-      // Save token and settings
+      const settingsPayload = { ...formData, serverdb: AMS_SERVER_DB };
       saveToken(token);
-      saveApiSettings(formData);
-      
-      // Save credentials for auto-refresh (without sensitive data in production)
-      localStorage.setItem('loginCredentials', JSON.stringify({
-        user: formData.user,
-        password: formData.password,
-        url: formData.url,
-        version: formData.version,
-        serverdb: formData.serverdb,
-        serverdbpass: formData.serverdbpass
-      }));
+      saveApiSettings(settingsPayload);
+
+      localStorage.setItem(
+        'loginCredentials',
+        JSON.stringify({
+          user: formData.user,
+          password: formData.password,
+          url: formData.url,
+          version: formData.version,
+          serverdb: AMS_SERVER_DB,
+          serverdbpass: formData.serverdbpass,
+        })
+      );
 
       // Update auth context
       login(token);
@@ -164,23 +165,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               required
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               placeholder="IP:Port du serveur"
-            />
-          </div>
-
-          {/* Database Name */}
-          <div>
-            <label htmlFor="serverdb" className="block text-sm font-medium text-blue-200 mb-2">
-              Base de données
-            </label>
-            <input
-              type="text"
-              id="serverdb"
-              name="serverdb"
-              value={formData.serverdb}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="Nom de la base de données"
             />
           </div>
 
