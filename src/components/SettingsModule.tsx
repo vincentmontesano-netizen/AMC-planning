@@ -6,6 +6,7 @@ export default function SettingsModule() {
   const [url, setUrl] = useState('');
   const [version, setVersion] = useState('');
   const [apiVer, setApiVer] = useState('');
+  const [serverdb, setServerdb] = useState('');
   const [serverdbpass, setServerdbpass] = useState('');
   const [saved, setSaved] = useState(false);
 
@@ -15,6 +16,7 @@ export default function SettingsModule() {
     setUrl(s.url);
     setVersion(s.version);
     setApiVer(s.apiVer);
+    setServerdb(s.serverdb ?? '');
     setServerdbpass(s.serverdbpass ?? '');
   }, []);
 
@@ -28,7 +30,7 @@ export default function SettingsModule() {
       version: version.trim(),
       apiVer: apiVer.trim(),
       serverdbpass,
-      serverdb: prev.serverdb || AMS_SERVER_DB,
+      serverdb: serverdb.trim() || AMS_SERVER_DB,
     });
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2800);
@@ -91,11 +93,20 @@ export default function SettingsModule() {
         </div>
 
         <div>
-          <p className="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1.5">Base de données</p>
-          <p className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 text-sm font-mono text-slate-700">
-            {AMS_SERVER_DB}
+          <label htmlFor="settings-serverdb" className="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1.5">
+            Base de données
+          </label>
+          <input
+            id="settings-serverdb"
+            value={serverdb}
+            onChange={(e) => setServerdb(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400/30"
+            placeholder={AMS_SERVER_DB}
+            autoComplete="off"
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            Laisser vide pour utiliser la valeur par défaut applicative ({AMS_SERVER_DB}).
           </p>
-          <p className="mt-1 text-xs text-slate-500">Valeur fixe côté application (variable d’environnement possible).</p>
         </div>
 
         <div>

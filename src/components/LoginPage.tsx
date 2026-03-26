@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AMS_SERVER_DB, loginERP, saveToken, saveApiSettings } from '../utils/api';
+import { loginERP, saveToken, saveApiSettings } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LoginPageProps {
@@ -13,6 +13,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     password: '',
     url: '46.105.115.223:8181',
     version: 'v1',
+    serverdb: '',
     serverdbpass: '',
     apiVer: 'v1',
   });
@@ -40,11 +41,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         password: formData.password,
         url: formData.url,
         version: formData.version,
-        serverdb: AMS_SERVER_DB,
+        serverdb: formData.serverdb.trim(),
         serverdbpass: formData.serverdbpass,
       });
 
-      const settingsPayload = { ...formData, serverdb: AMS_SERVER_DB };
+      const settingsPayload = { ...formData, serverdb: formData.serverdb.trim() };
       saveToken(token);
       saveApiSettings(settingsPayload);
 
@@ -55,7 +56,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           password: formData.password,
           url: formData.url,
           version: formData.version,
-          serverdb: AMS_SERVER_DB,
+          serverdb: formData.serverdb.trim(),
           serverdbpass: formData.serverdbpass,
         })
       );
@@ -82,7 +83,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">iKanban PR</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">iPlanning Tech</h1>
           <p className="text-blue-200">Connectez-vous pour accéder à l'application</p>
         </div>
 
@@ -164,6 +165,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               required
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               placeholder="IP:Port du serveur"
+            />
+          </div>
+
+          {/* Base de données */}
+          <div>
+            <label htmlFor="serverdb" className="block text-sm font-medium text-blue-200 mb-2">
+              Base de données
+            </label>
+            <input
+              type="text"
+              id="serverdb"
+              name="serverdb"
+              value={formData.serverdb}
+              onChange={handleChange}
+              required
+              autoComplete="off"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-300/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Nom de la base AMS"
             />
           </div>
 
