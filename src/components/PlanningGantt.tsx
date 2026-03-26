@@ -44,6 +44,16 @@ function parseDate(input?: string | null): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+/** Employé déjà sorti : date de sortie strictement avant aujourd'hui (calendrier Europe/Paris). */
+function isAlreadyExitedParis(dateexit?: string | null): boolean {
+  if (!dateexit?.trim()) return false;
+  const d = parseDate(dateexit);
+  if (!d) return false;
+  const exitYmd = d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' });
+  const todayYmd = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' });
+  return exitYmd < todayYmd;
+}
+
 function startOfWeekMonday(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -105,6 +115,7 @@ export default function PlanningGantt(props: {
   // Tri + parsing dates : ne dépend pas de la semaine (évite de tout recalculer au clic ← →)
   const preparedTechnicians = useMemo(() => {
     return employees
+      .filter((e) => !isAlreadyExitedParis(e.dateexit))
       .map((e) => ({
         ...e,
         startDate: parseDate(e.dateenrol),
@@ -372,7 +383,10 @@ export default function PlanningGantt(props: {
         <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-600">
             <span className="font-semibold text-slate-900">{totalTechnicians}</span> employé
-            {totalTechnicians !== 1 ? 's' : ''}
+            {totalTechnicians !== 1 ? 's' : ''}{' '}
+            <span className="font-semibold text-emerald-600">
+              actif{totalTechnicians !== 1 ? 's' : ''}
+            </span>
             {totalTechnicians > 0 && (
               <>
                 {' '}
