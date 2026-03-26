@@ -18,6 +18,22 @@ const SHIFT_SELECT_OPTIONS = SHIFT_TYPES.map((s) => ({
 
 const PAGE_SIZE = 25;
 
+/** Filtre « Null » : techniciens sans station sur la semaine (principale + affectations jour) */
+const STATION_FILTER_NULL = '__filter_station_null__';
+
+function effectiveStationForDay(
+  empcode: string,
+  dayKeySuffix: string,
+  princstation: string | null | undefined,
+  stationSelections: Record<string, string>
+): string {
+  const dayKey = `${empcode}-${dayKeySuffix}`;
+  if (Object.prototype.hasOwnProperty.call(stationSelections, dayKey)) {
+    return (stationSelections[dayKey] ?? '').trim();
+  }
+  return (stationSelections[empcode] ?? princstation ?? '').trim();
+}
+
 function fullName(e: Employee): string {
   return `${e.empfname ?? ''} ${e.emplname ?? ''}`.trim() || e.empcode;
 }
@@ -109,6 +125,14 @@ export default function PlanningGantt(props: {
   const technicians = useMemo(() => {
     if (stationFilter === 'all') {
       return techniciansBase;
+    }
+    if (stationFilter === STATION_FILTER_NULL) {
+      return techniciansBase.filter((e) =>
+        dayMetas.every(
+          (meta) =>
+            effectiveStationForDay(e.empcode, meta.keySuffix, e.princstation, stationSelections) === ''
+        )
+      );
     }
     return techniciansBase.filter((e) => {
       const baseStation = (e.princstation ?? '').trim();
@@ -327,6 +351,7 @@ export default function PlanningGantt(props: {
               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400/30 sm:w-52"
             >
               <option value="all">Toutes les stations</option>
+              <option value={STATION_FILTER_NULL}>Null</option>
               {stationOptions.map((station) => (
                 <option key={`filter-${station}`} value={station}>
                   {station}
@@ -550,7 +575,7 @@ const Row = memo(function Row(props: { index: number; style: React.CSSProperties
               const selectedStation = data.stationSelections[dayKey] ?? fallbackStation;
               const stationEmpty = !selectedStation.trim();
               const stationSelectClass = stationEmpty
-                ? 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:bg-slate-100/80 focus:ring-slate-400/25'
+                ? 'border-slate-200 bg-white text-slate-500 shadow-sm hover:border-slate-300 hover:bg-white focus:ring-slate-400/25'
                 : 'border-slate-200 bg-white text-slate-800 shadow-sm ring-1 ring-slate-900/[0.04] hover:border-slate-300 focus:ring-slate-400/25';
               return (
                 <div key={dayKey} className="px-[2px]" style={{ width: data.dayCellWidth }}>
